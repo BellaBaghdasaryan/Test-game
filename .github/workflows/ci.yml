@@ -7,10 +7,29 @@ on:
     branches: [ main ]
 
 jobs:
+  check-project:
+    name: Check Project Setup
+    runs-on: ubuntu-latest
+    outputs:
+      has-package-json: ${{ steps.check.outputs.has-package-json }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for package.json
+        id: check
+        run: |
+          if [ -f "package.json" ]; then
+            echo "has-package-json=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-package-json=false" >> $GITHUB_OUTPUT
+          fi
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') != ''
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
 
     steps:
       - name: Checkout code
@@ -31,7 +50,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') != ''
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
 
     steps:
       - name: Checkout code
@@ -58,7 +78,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') != ''
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
 
     steps:
       - name: Checkout code
@@ -86,7 +107,8 @@ jobs:
   verify-setup:
     name: Verify CI/CD Setup
     runs-on: ubuntu-latest
-    if: hashFiles('package.json') == ''
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'false'
 
     steps:
       - name: Checkout code

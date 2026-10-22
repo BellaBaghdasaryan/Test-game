@@ -5,10 +5,29 @@ on:
     branches: [ main ]
 
 jobs:
+  check-project:
+    name: Check Project Setup
+    runs-on: ubuntu-latest
+    outputs:
+      has-package-json: ${{ steps.check.outputs.has-package-json }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for package.json
+        id: check
+        run: |
+          if [ -f "package.json" ]; then
+            echo "has-package-json=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-package-json=false" >> $GITHUB_OUTPUT
+          fi
+
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && hashFiles('package.json') != ''
+    needs: check-project
+    if: github.ref == 'refs/heads/main' && needs.check-project.outputs.has-package-json == 'true'
 
     steps:
       - name: Checkout code

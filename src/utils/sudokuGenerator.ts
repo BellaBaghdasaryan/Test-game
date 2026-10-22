@@ -85,8 +85,8 @@ export function generateSudoku(difficulty: number = 40): SudokuBoard {
   const complete = generateCompleteSudoku()
   const puzzle = removeNumbers(complete, difficulty)
 
-  return puzzle.map((row, rowIndex) =>
-    row.map((value, colIndex): SudokuCell => ({
+  return puzzle.map((row) =>
+    row.map((value): SudokuCell => ({
       value,
       isFixed: value !== 0,
       isValid: true,

@@ -1,0 +1,21 @@
+.sudoku-board {
+  display: inline-block;
+  border: 3px solid #333;
+  background: #333;
+  gap: 0;
+  outline: none;
+}
+
+.sudoku-row {
+  display: flex;
+  gap: 0;
+}
+
+.sudoku-row:not(:last-child) .sudoku-cell {
+  border-bottom: 1px solid #ccc;
+}
+
+.sudoku-row:nth-child(3) .sudoku-cell,
+.sudoku-row:nth-child(6) .sudoku-cell {
+  border-bottom: 3px solid #333;
+}

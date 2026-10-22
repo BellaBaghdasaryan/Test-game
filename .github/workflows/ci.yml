@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-project:
+    name: Check Project Setup
+    runs-on: ubuntu-latest
+    outputs:
+      has-package-json: ${{ steps.check.outputs.has-package-json }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for package.json
+        id: check
+        run: |
+          if [ -f "package.json" ]; then
+            echo "has-package-json=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-package-json=false" >> $GITHUB_OUTPUT
+          fi
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+          retention-days: 7
+
+  verify-setup:
+    name: Verify CI/CD Setup
+    runs-on: ubuntu-latest
+    needs: check-project
+    if: needs.check-project.outputs.has-package-json == 'false'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify workflow files exist
+        run: |
+          echo "✅ CI/CD workflows are configured"
+          echo "Workflows:"
+          ls -la .github/workflows/
+          echo ""
+          echo "Note: Lint, Test, and Build jobs will run once package.json is added to the repository"

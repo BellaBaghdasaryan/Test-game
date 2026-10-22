@@ -10,6 +10,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    if: hashFiles('package.json') != ''
 
     steps:
       - name: Checkout code
@@ -30,6 +31,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    if: hashFiles('package.json') != ''
 
     steps:
       - name: Checkout code
@@ -56,6 +58,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    if: hashFiles('package.json') != ''
 
     steps:
       - name: Checkout code
@@ -79,3 +82,20 @@ jobs:
           name: build
           path: dist/
           retention-days: 7
+
+  verify-setup:
+    name: Verify CI/CD Setup
+    runs-on: ubuntu-latest
+    if: hashFiles('package.json') == ''
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify workflow files exist
+        run: |
+          echo "✅ CI/CD workflows are configured"
+          echo "Workflows:"
+          ls -la .github/workflows/
+          echo ""
+          echo "Note: Lint, Test, and Build jobs will run once package.json is added to the repository"
